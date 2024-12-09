@@ -11,8 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TelegramBot extends TelegramLongPollingBot {
-    private static final String SAY_HELLO_BTN = "Скажи привет!!!";
-    private static final String HOW_ARE_YOU_BTN = "Как дела???";
+
+    private static final String ADD_EXPENSE_BTN = "Добавить расходы";
+    private static final String SHOW_CATEGORIES = "Показать категории";
+    private static final String SHOW_EXPENSES = "Показать расходы";
 
     @Override
     public String getBotUsername() {
@@ -40,16 +42,22 @@ public class TelegramBot extends TelegramLongPollingBot {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId().toString()); // Устанавливаем ID чата
 
-        KeyboardRow row = new KeyboardRow(); //добавляем ряд кнопок
-        row.add(SAY_HELLO_BTN); // одна кнопка
-        row.add(HOW_ARE_YOU_BTN);//вторая кнопка
-        List<KeyboardRow> rows = new ArrayList<>();
-        rows.add(row); //добавляем ряд row в список rows
+        KeyboardRow row1 = new KeyboardRow(); //добавляем ряд кнопок
+        row1.add(ADD_EXPENSE_BTN); // одна кнопка
+        KeyboardRow row2 = new KeyboardRow(); //добавляем ряд кнопок
+        row2.add(SHOW_CATEGORIES);//вторая кнопка
+        KeyboardRow row3 = new KeyboardRow();
+        row3.add(SHOW_EXPENSES);//третья кнопка
 
-        if (text.equals(SAY_HELLO_BTN)) {// Если прислано "Скажи привет!!!" или нажата кнопка "Скажи привет!!!" то
-            sendMessage.setText("Привет!");
-        } else {
-            sendMessage.setText("Я не знаю такой команды"); // иначе пользователю отдаётся то же сообщение, что он прислал
+        List<KeyboardRow> rows = new ArrayList<>();
+        rows.add(row1); //добавляем ряд row1 в список rows
+        rows.add(row2); //добавляем ряд row2 в список rows
+        rows.add(row3); //добавляем ряд row3 в список rows
+
+        switch (text){
+            case SHOW_CATEGORIES -> sendMessage.setText("Транспорт\nПродукты");
+            case SHOW_EXPENSES -> sendMessage.setText("Транспорт: 300\nПродукты: 100");
+            default -> sendMessage.setText("Я не знаю такой команды");
         }
 
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
