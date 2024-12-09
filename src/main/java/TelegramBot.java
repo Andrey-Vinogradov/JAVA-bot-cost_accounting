@@ -49,7 +49,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         if (text.equals(SAY_HELLO_BTN)) {// Если прислано "Скажи привет!!!" или нажата кнопка "Скажи привет!!!" то
             sendMessage.setText("Привет!");
         } else {
-            sendMessage.setText(text); // иначе пользователю отдаётся то же сообщение, что он прислал
+            sendMessage.setText("Я не знаю такой команды"); // иначе пользователю отдаётся то же сообщение, что он прислал
         }
 
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
@@ -63,7 +63,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             execute(sendMessage); // ответ пользователю в телеграм обратно
         } catch (TelegramApiException e) {
             System.err.println("!!!Error!!! sending failed: " + e.getMessage());
-            e.printStackTrace();
+            e.printStackTrace();//обработка ошибок
         }
     }
 }
