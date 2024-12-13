@@ -15,8 +15,8 @@ import java.util.Map;
 public class TelegramBot extends TelegramLongPollingBot {
 
     private static final String ADD_EXPENSE_BTN = "Добавить расходы";
-    private static final String SHOW_CATEGORIES = "Показать категории";
-    private static final String SHOW_EXPENSES = "Показать расходы";
+    private static final String SHOW_CATEGORIES_BTN = "Показать категории";
+    private static final String SHOW_EXPENSES_BTN = "Показать расходы";
 
     private static final Map<String, List<Integer>> EXPENSES = new HashMap<>();
     // Создаём сущность (Map<>) типа
@@ -54,9 +54,9 @@ public class TelegramBot extends TelegramLongPollingBot {
         KeyboardRow row1 = new KeyboardRow(); //добавляем ряд кнопок
         row1.add(ADD_EXPENSE_BTN); // одна кнопка
         KeyboardRow row2 = new KeyboardRow(); //добавляем ряд кнопок
-        row2.add(SHOW_CATEGORIES);//вторая кнопка
+        row2.add(SHOW_CATEGORIES_BTN);//вторая кнопка
         KeyboardRow row3 = new KeyboardRow();
-        row3.add(SHOW_EXPENSES);//третья кнопка
+        row3.add(SHOW_EXPENSES_BTN);//третья кнопка
 
         List<KeyboardRow> rows = new ArrayList<>();
         rows.add(row1); //добавляем ряд row1 в список rows
@@ -64,8 +64,8 @@ public class TelegramBot extends TelegramLongPollingBot {
         rows.add(row3); //добавляем ряд row3 в список rows
 
         switch (text){
-            case SHOW_CATEGORIES -> sendMessage.setText(getFormattedCategories());//Вывод всех категорий
-            case SHOW_EXPENSES -> sendMessage.setText(getFormattedExpenses());
+            case SHOW_CATEGORIES_BTN -> sendMessage.setText(getFormattedCategories());//Вывод всех категорий
+            case SHOW_EXPENSES_BTN -> sendMessage.setText(getFormattedExpenses());
             case ADD_EXPENSE_BTN -> sendMessage.setText("Введите имя категории и сумму через пробел");
             default -> {
                 //Мы ждём от пользователя сообщение типа: "Транспорт 100"
@@ -91,6 +91,9 @@ public class TelegramBot extends TelegramLongPollingBot {
         replyKeyboardMarkup.setResizeKeyboard(true); // Устанавливаем параметры клавиатуры
         replyKeyboardMarkup.setOneTimeKeyboard(false);
         replyKeyboardMarkup.setSelective(true);
+
+buildKeyboard(List.of(ADD_EXPENSE_BTN, SHOW_CATEGORIES_BTN, SHOW_EXPENSES_BTN));
+
         sendMessage.setReplyMarkup(replyKeyboardMarkup); //ответ на нажатие кнопки
 
         try {
@@ -100,11 +103,23 @@ public class TelegramBot extends TelegramLongPollingBot {
             e.printStackTrace();//обработка ошибок
         }
     }
+    //Функция для создания клавиатуры бота
+    private ReplyKeyboardMarkup buildKeyboard(List<String> buttonNames){
+        List<KeyboardRow> rows = new ArrayList<>();//создаём список кнопок
+        for(String buttonName : buttonNames){
+            final KeyboardRow row = new KeyboardRow();//создаём ряд
+            row.add(buttonName);//добавляем кнопку в ряд
+            rows.add(row);//добавляем ряд в список рядов
+        }
+        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
+        keyboard.setKeyboard(rows);
+        return keyboard;
+    }
     //Функция для вывода названий категорий в удобном формате
     private  String getFormattedCategories(){
         return String.join( "\n", EXPENSES.keySet());
     }
-    //Функция для вывода расходов удобном формате
+    //Функция для вывода расходов в удобном формате
     private  String getFormattedExpenses(){
         String formatedResult = "";
         for(Map.Entry<String, List<Integer>> category : EXPENSES.entrySet()){
