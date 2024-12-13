@@ -8,13 +8,22 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TelegramBot extends TelegramLongPollingBot {
 
     private static final String ADD_EXPENSE_BTN = "Добавить расходы";
     private static final String SHOW_CATEGORIES = "Показать категории";
     private static final String SHOW_EXPENSES = "Показать расходы";
+
+    private static final Map<String, List<Integer>> EXPENSES = new HashMap<>();
+    // Создаём сущность (Map<>) типа
+    // Транспорт -> [10, 20, 33]
+    // Продукты -> [11, 15, 5]
+    // ... и т.д.
+
 
     @Override
     public String getBotUsername() {
@@ -55,9 +64,26 @@ public class TelegramBot extends TelegramLongPollingBot {
         rows.add(row3); //добавляем ряд row3 в список rows
 
         switch (text){
-            case SHOW_CATEGORIES -> sendMessage.setText("Транспорт\nПродукты");
-            case SHOW_EXPENSES -> sendMessage.setText("Транспорт: 300\nПродукты: 100");
-            default -> sendMessage.setText("Я не знаю такой команды");
+            case SHOW_CATEGORIES -> sendMessage.setText(getFormattedCategories());//Вывод всех категорий
+            case SHOW_EXPENSES -> sendMessage.setText(getFormattedExpenses());
+            case ADD_EXPENSE_BTN -> sendMessage.setText("Введите имя категории и сумму через пробел");
+            default -> {
+                //Мы ждём от пользователя сообщение типа: "Транспорт 100"
+                String[] expense = text.split(" ");
+                if(expense.length == 2){ //Проверяем, что количество введённых слов равно 2
+                    String category = expense[0];
+//                    if(!EXPENSES.containsKey(category)){//Если категория не имеется, то будем создавать
+//                        EXPENSES.put(category, new ArrayList<>());
+
+                    EXPENSES.putIfAbsent(category, new ArrayList<>());// То же, что и вверху, только через спец оператор
+                    //Если категория имеется, то будем добавлять в категорию трату
+                    Integer sum = Integer.parseInt(expense[1]);
+                    EXPENSES.get(category).add(sum);
+                } else{
+                    sendMessage.setText("Похоже Вы не верно ввели трату :(");
+                }
+
+            }
         }
 
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
@@ -73,5 +99,21 @@ public class TelegramBot extends TelegramLongPollingBot {
             System.err.println("!!!Error!!! sending failed: " + e.getMessage());
             e.printStackTrace();//обработка ошибок
         }
+    }
+    //Функция для вывода названий категорий в удобном формате
+    private  String getFormattedCategories(){
+        return String.join( "\n", EXPENSES.keySet());
+    }
+    //Функция для вывода расходов удобном формате
+    private  String getFormattedExpenses(){
+        String formatedResult = "";
+        for(Map.Entry<String, List<Integer>> category : EXPENSES.entrySet()){
+            String categoryExpenses = "";
+            for(Integer expense : category.getValue()){
+                categoryExpenses += expense + " ";
+            }
+            formatedResult += category.getKey()+ ": " + categoryExpenses + "\n";
+        }
+        return formatedResult;
     }
 }
