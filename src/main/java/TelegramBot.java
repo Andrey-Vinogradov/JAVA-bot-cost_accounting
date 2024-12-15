@@ -7,10 +7,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class TelegramBot extends TelegramLongPollingBot {
 
@@ -50,19 +47,6 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId().toString()); // Устанавливаем ID чата
-
-        KeyboardRow row1 = new KeyboardRow(); //добавляем ряд кнопок
-        row1.add(ADD_EXPENSE_BTN); // одна кнопка
-        KeyboardRow row2 = new KeyboardRow(); //добавляем ряд кнопок
-        row2.add(SHOW_CATEGORIES_BTN);//вторая кнопка
-        KeyboardRow row3 = new KeyboardRow();
-        row3.add(SHOW_EXPENSES_BTN);//третья кнопка
-
-        List<KeyboardRow> rows = new ArrayList<>();
-        rows.add(row1); //добавляем ряд row1 в список rows
-        rows.add(row2); //добавляем ряд row2 в список rows
-        rows.add(row3); //добавляем ряд row3 в список rows
-
         switch (text){
             case SHOW_CATEGORIES_BTN -> sendMessage.setText(getFormattedCategories());//Вывод всех категорий
             case SHOW_EXPENSES_BTN -> sendMessage.setText(getFormattedExpenses());
@@ -85,6 +69,17 @@ public class TelegramBot extends TelegramLongPollingBot {
 
             }
         }
+        KeyboardRow row1 = new KeyboardRow(); //добавляем ряд кнопок
+        row1.add(ADD_EXPENSE_BTN); // одна кнопка
+        KeyboardRow row2 = new KeyboardRow(); //добавляем ряд кнопок
+        row2.add(SHOW_CATEGORIES_BTN);//вторая кнопка
+        KeyboardRow row3 = new KeyboardRow();
+        row3.add(SHOW_EXPENSES_BTN);//третья кнопка
+
+        List<KeyboardRow> rows = new ArrayList<>();
+        rows.add(row1); //добавляем ряд row1 в список rows
+        rows.add(row2); //добавляем ряд row2 в список rows
+        rows.add(row3); //добавляем ряд row3 в список rows
 
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         replyKeyboardMarkup.setKeyboard(rows);
@@ -92,9 +87,13 @@ public class TelegramBot extends TelegramLongPollingBot {
         replyKeyboardMarkup.setOneTimeKeyboard(false);
         replyKeyboardMarkup.setSelective(true);
 
-buildKeyboard(List.of(ADD_EXPENSE_BTN, SHOW_CATEGORIES_BTN, SHOW_EXPENSES_BTN));
-
-        sendMessage.setReplyMarkup(replyKeyboardMarkup); //ответ на нажатие кнопки
+        ReplyKeyboardMarkup keyboard = buildKeyboard(
+                List.of(ADD_EXPENSE_BTN,
+                        SHOW_CATEGORIES_BTN,
+                        SHOW_EXPENSES_BTN
+                )
+        );
+        sendMessage.setReplyMarkup(keyboard); //ответ на нажатие кнопки
 
         try {
             execute(sendMessage); // ответ пользователю в телеграм обратно
@@ -103,6 +102,13 @@ buildKeyboard(List.of(ADD_EXPENSE_BTN, SHOW_CATEGORIES_BTN, SHOW_EXPENSES_BTN));
             e.printStackTrace();//обработка ошибок
         }
     }
+
+
+
+
+
+
+
     //Функция для создания клавиатуры бота
     private ReplyKeyboardMarkup buildKeyboard(List<String> buttonNames){
         List<KeyboardRow> rows = new ArrayList<>();//создаём список кнопок
@@ -117,10 +123,15 @@ buildKeyboard(List.of(ADD_EXPENSE_BTN, SHOW_CATEGORIES_BTN, SHOW_EXPENSES_BTN));
     }
     //Функция для вывода названий категорий в удобном формате
     private  String getFormattedCategories(){
+        Set<String> categories = EXPENSES.keySet();
+        if(categories.isEmpty()) return "Пока нет ни одной категории";//обработка случая пока нет категорий
         return String.join( "\n", EXPENSES.keySet());
     }
     //Функция для вывода расходов в удобном формате
     private  String getFormattedExpenses(){
+        Set<Map.Entry<String, List<Integer>>> expensesPerCategories = EXPENSES.entrySet();
+        if(expensesPerCategories.isEmpty()) return "Пока нет расходов";//если не введены расходы
+
         String formatedResult = "";
         for(Map.Entry<String, List<Integer>> category : EXPENSES.entrySet()){
             String categoryExpenses = "";
