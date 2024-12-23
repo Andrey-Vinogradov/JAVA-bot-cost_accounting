@@ -10,10 +10,17 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.util.*;
 
 public class TelegramBot extends TelegramLongPollingBot {
-
+    //константы для кнопок
     private static final String ADD_EXPENSE_BTN = "Добавить расходы";
     private static final String SHOW_CATEGORIES_BTN = "Показать категории";
     private static final String SHOW_EXPENSES_BTN = "Показать расходы";
+    //константы для состояний
+    private static final String IDLE_STATE = "IDLE";
+    private static final String AWAITS_CATEGORY_STATE = "AWAITS_CATEGORY";
+    private static final String AWAITS_EXPENSE_STATE = "AWAITS_EXPENSE";
+
+    //переменная для хранения текущего состояния
+    private static String currentState = IDLE_STATE;
 
     private static final Map<String, List<Integer>> EXPENSES = new HashMap<>();
     // Создаём сущность (Map<>) типа
@@ -45,30 +52,38 @@ public class TelegramBot extends TelegramLongPollingBot {
         String logMessage = from.getUserName() + " :" + text; //имя пользователя + текст пользователя
         System.out.println(logMessage);
 
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(message.getChatId().toString()); // Устанавливаем ID чата
-        switch (text){
-            case SHOW_CATEGORIES_BTN -> sendMessage.setText(getFormattedCategories());//Вывод всех категорий
-            case SHOW_EXPENSES_BTN -> sendMessage.setText(getFormattedExpenses());
-            case ADD_EXPENSE_BTN -> sendMessage.setText("Введите имя категории и сумму через пробел");
-            default -> {
-                //Мы ждём от пользователя сообщение типа: "Транспорт 100"
-                String[] expense = text.split(" ");
-                if(expense.length == 2){ //Проверяем, что количество введённых слов равно 2
-                    String category = expense[0];
-//                    if(!EXPENSES.containsKey(category)){//Если категория не имеется, то будем создавать
-//                        EXPENSES.put(category, new ArrayList<>());
-
-                    EXPENSES.putIfAbsent(category, new ArrayList<>());// То же, что и вверху, только через спец оператор
-                    //Если категория имеется, то будем добавлять в категорию трату
-                    Integer sum = Integer.parseInt(expense[1]);
-                    EXPENSES.get(category).add(sum);
-                } else{
-                    sendMessage.setText("Похоже Вы не верно ввели трату :(");
-                }
-
-            }
+        switch (currentState){
+            case IDLE_STATE -> handleIdle(message);
+            case AWAITS_CATEGORY_STATE -> System.out.println(currentState);
+            case AWAITS_EXPENSE_STATE -> System.out.println(currentState);
         }
+
+ //       SendMessage sendMessage = new SendMessage();
+ //       sendMessage.setChatId(message.getChatId().toString()); // Устанавливаем ID чата
+//        switch (text){
+//            case SHOW_CATEGORIES_BTN -> sendMessage.setText(getFormattedCategories());//Вывод всех категорий
+//            case SHOW_EXPENSES_BTN -> sendMessage.setText(getFormattedExpenses());
+//            case ADD_EXPENSE_BTN -> sendMessage.setText("Введите имя категории и сумму через пробел");
+//            default -> {
+//                //Мы ждём от пользователя сообщение типа: "Транспорт 100"
+//                String[] expense = text.split(" ");
+//                if(expense.length == 2){ //Проверяем, что количество введённых слов равно 2
+//                    String category = expense[0];
+//                  //  if(!EXPENSES.containsKey(category)){//Если категория не имеется, то будем создавать
+//                  //       EXPENSES.put(category, new ArrayList<>());
+//
+//                    EXPENSES.putIfAbsent(category, new ArrayList<>());// То же, что и вверху, только через спец оператор
+//                    //Если категория имеется, то будем добавлять в категорию трату
+//                    Integer sum = Integer.parseInt(expense[1]);
+//                    EXPENSES.get(category).add(sum);
+//                } else{
+//                    sendMessage.setText("Похоже Вы не верно ввели трату :(");
+//                }
+//
+//            }
+//        }
+
+
         KeyboardRow row1 = new KeyboardRow(); //добавляем ряд кнопок
         row1.add(ADD_EXPENSE_BTN); // одна кнопка
         KeyboardRow row2 = new KeyboardRow(); //добавляем ряд кнопок
@@ -87,7 +102,49 @@ public class TelegramBot extends TelegramLongPollingBot {
         replyKeyboardMarkup.setOneTimeKeyboard(false);
         replyKeyboardMarkup.setSelective(true);
 
-        ReplyKeyboardMarkup keyboard = buildKeyboard(
+//        ReplyKeyboardMarkup keyboard = buildKeyboard(
+//                List.of(ADD_EXPENSE_BTN,
+//                        SHOW_CATEGORIES_BTN,
+//                        SHOW_EXPENSES_BTN
+//                )
+//        );
+//        sendMessage.setReplyMarkup(keyboard); //ответ на нажатие кнопки
+//
+//        try {
+//            execute(sendMessage); // ответ пользователю в телеграм обратно
+//        } catch (TelegramApiException e) {
+//            System.err.println("!!!Error!!! sending failed: " + e.getMessage());
+//            e.printStackTrace();//обработка ошибок
+//        }
+    }
+    //функция, которая принимает сообщения от пользователя
+        private void handleIdle(Message incomingMessage){
+            String incomingText = incomingMessage.getText();
+            Long chatID = incomingMessage.getChatId();
+            SendMessage sendMessage = new SendMessage();
+            sendMessage.setChatId(chatID); // Устанавливаем ID чата
+            switch (incomingText){
+             case SHOW_CATEGORIES_BTN -> sendMessage.setText(getFormattedCategories());//Вывод всех категорий
+             case SHOW_EXPENSES_BTN -> sendMessage.setText(getFormattedExpenses());
+             case ADD_EXPENSE_BTN -> sendMessage.setText("Введите имя категории и сумму через пробел");
+             default -> {
+                //Мы ждём от пользователя сообщение типа: "Транспорт 100"
+                String[] expense = incomingText.split(" ");
+                if(expense.length == 2){ //Проверяем, что количество введённых слов равно 2
+                    String category = expense[0];
+                  //  if(!EXPENSES.containsKey(category)){//Если категория не имеется, то будем создавать
+                  //       EXPENSES.put(category, new ArrayList<>());
+
+                    EXPENSES.putIfAbsent(category, new ArrayList<>());// То же, что и вверху, только через спец оператор
+                    //Если категория имеется, то будем добавлять в категорию трату
+                    Integer sum = Integer.parseInt(expense[1]);
+                    EXPENSES.get(category).add(sum);
+                } else{
+                    sendMessage.setText("Похоже Вы не верно ввели трату :(");
+                }
+            }
+        }
+            ReplyKeyboardMarkup keyboard = buildKeyboard(
                 List.of(ADD_EXPENSE_BTN,
                         SHOW_CATEGORIES_BTN,
                         SHOW_EXPENSES_BTN
@@ -101,8 +158,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             System.err.println("!!!Error!!! sending failed: " + e.getMessage());
             e.printStackTrace();//обработка ошибок
         }
-    }
-
+        }
 
 
 
